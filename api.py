@@ -1,6 +1,7 @@
-# api.py — FloodGuard Clean Pipeline API v7
+# api.py — FloodGuard Clean Pipeline API v8
 # Matches flood_prediction_clean_pipeline.ipynb
-# 3 classes: Low=0 / Medium=1 / High=2  |  Top-5 towns  |  No scaler needed
+# 3 classes: Low=0 / Medium=1 / High=2  |  Top-5 towns  |  No scaler
+# lat/lon in model features but excluded from /explain SHAP output
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -17,7 +18,7 @@ try:
 except ImportError:
     SHAP_AVAILABLE = False
 
-app = FastAPI(title="FloodGuard API", version="7.0")
+app = FastAPI(title="FloodGuard API", version="8.0")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 BASE          = os.path.dirname(os.path.abspath(__file__))
@@ -87,6 +88,7 @@ TOWN_COORDS = {t: ALL_COORDS[t] for t in TOWNS if t in ALL_COORDS}
 
 # ── Feature display names ─────────────────────────────────────────────────────
 DISPLAY = {
+
     "latitude":           "Latitude",
     "longitude":          "Longitude",
     "temp_max":           "Max Temperature (°C)",
@@ -126,15 +128,14 @@ def plain_english(feat, sv, fv):
 # ── Build feature vector from request ────────────────────────────────────────
 def build_features(day) -> pd.DataFrame:
     """Construct exactly the feature vector the model was trained on."""
-    now     = datetime.utcnow()
-    coords  = TOWN_COORDS.get(day.town, {"lat": 54.0, "lon": -1.5})
-
     # Start with all zeros for every feature the model expects
     row = {f: 0 for f in FEATURES}
 
-    # Geographic
-    row["latitude"]          = coords["lat"]
-    row["longitude"]         = coords["lon"]
+    coords = TOWN_COORDS.get(day.town, {"lat": 54.0, "lon": -1.5})
+
+    # Geographic — kept in model for accuracy but excluded from SHAP explanations
+    row["latitude"]  = coords["lat"]
+    row["longitude"] = coords["lon"]
 
     # Weather (raw column names — no wx_ prefix in this pipeline)
     row["temp_max"]           = day.temp_max
@@ -294,7 +295,8 @@ def explain(req: PredictionRequest):
                 "direction":    "positive" if row_sv[j] > 0 else "negative",
                 "explanation":  plain_english(feat, float(row_sv[j]), float(row_val[feat])),
             } for j, feat in enumerate(FEATURES)
-              if not feat.startswith("town_")],   # hide town cols from API response too
+              if not feat.startswith("town_")
+              and feat not in {"latitude", "longitude"}],  # weather/suitability only
             key=lambda x: x["abs_shap"], reverse=True)
 
             pm = float(all_probs[i][CLASS_NAMES.index("Medium")]) if "Medium" in CLASS_NAMES else 0
