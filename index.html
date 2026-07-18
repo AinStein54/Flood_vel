@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>UK Flood System</title>
+  <link rel="icon" href="https://cdn-icons-png.flaticon.com/64/4279/4279800.png"/>
+  <link rel="stylesheet" href="styles.css"/>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <span class="logo-icon">🌊</span>
+      <h1>UK Flood System</h1>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<!-- ── TOWN SELECTION ────────────────────────────────────────────────────────── -->
+<section id="search-section">
+  <div class="search-card">
+    <h2>📍 Choose a town for Flood Risk Forecasting</h2>
+
+    <div class="town-grid" id="town-grid">
+      <!-- filled by JS -->
+    </div>
+
+    <div id="location-card" style="display:none">
+      <div class="location-info">
+        <div class="loc-icon">📌</div>
+        <div>
+          <div class="loc-name" id="loc-name"></div>
+          <div class="loc-detail" id="loc-detail"></div>
+        </div>
+        <div class="loc-coords" id="loc-coords"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── TODAY ─────────────────────────────────────────────────────────────── -->
+<section id="today-section" style="display:none">
+  <div class="section-header">
+    <h2>☀️ Today's Weather</h2>
+    <span class="section-date" id="today-date"></span>
+  </div>
+  <div class="weather-grid" id="today-grid"></div>
+</section>
+
+<!-- ── CHART ─────────────────────────────────────────────────────────────── -->
+<section id="chart-section" style="display:none">
+  <h2>📅 7-Day Forecast Overview</h2>
+  <div class="chart-wrap">
+    <div class="chart-legend">
+      <span><span class="legend-dot" style="background:#60a5fa"></span>Max Temp (°C)</span>
+      <span><span class="legend-dot" style="background:#a5b4fc"></span>Min Temp (°C)</span>
+      <span><span class="legend-bar" style="background:#818cf870"></span>Precipitation (mm)</span>
+    </div>
+    <svg id="d3-chart"></svg>
+  </div>
+</section>
+
+<!-- ── DAY PICKER ────────────────────────────────────────────────────────── -->
+<section id="picker-section" style="display:none">
+  <h2>🔎 Choose Any Day for Specific Analysis</h2>
+  <div class="picker-row">
+    <select id="day-dropdown" onchange="showSelectedDay()">
+      <option value="">— Choose a day —</option>
+    </select>
+  </div>
+  <div id="day-detail-box" style="display:none" class="day-detail-card"></div>
+</section>
+
+<!-- ── 7-DAY PREDICTION ──────────────────────────────────────────────────── -->
+<section id="prediction-section" style="display:none">
+  <h2>🤖 7-Day Flood Risk Prediction</h2>
+   <button class="btn-predict" id="predict-btn" onclick="run7DayPrediction()">
+    Get Prediction
+  </button>
+  <div id="prediction-result"></div>
+</section>
+
+<!-- ── SHAP XAI ──────────────────────────────────────────────────────────── -->
+<section id="xai-section" style="display:none">
+  <h2>Why this prediction? (SHAP Explanation)</h2>
+
+  <div class="xai-day-tabs" id="xai-day-tabs"></div>
+
+  <div class="xai-panel">
+    <div class="xai-panel-header">
+      <span class="xai-badge shap-badge">SHAP</span>
+      <h3>Feature Impact Analysis</h3>
+      <span class="xai-method" id="xai-method-label"></span>
+    </div>
+
+    <div class="gauge-row">
+      <div class="gauge-wrap">
+        <svg id="gauge-svg" viewBox="0 0 220 130" width="220"></svg>
+        <div class="gauge-label">
+          <div class="gauge-pct" id="gauge-pct">—</div>
+          <div class="gauge-risk" id="gauge-risk">—</div>
+        </div>
+      </div>
+      <div class="bullets-wrap">
+        <h4>🔑 Key weather factors driving this prediction:</h4>
+        <ul id="shap-bullets" class="bullet-list"></ul>
+      </div>
+    </div>
+
+    <div class="shap-chart-wrap">
+      <h4>Feature importance - SHAP values for this prediction</h4>
+      <p class="chart-hint"> Red = increases flood risk &nbsp;|&nbsp; Blue = decreases flood risk &nbsp;|&nbsp; Right = actual value</p>
+      <svg id="shap-chart"></svg>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p>
+    Weather: <a href="https://open-meteo.com" target="_blank">Open-Meteo</a> ·
+    Model trained on North East Yorkshire flood history ·
+    XAI: SHAP · Backend: FastAPI on Render
+  </p>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
